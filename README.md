@@ -84,3 +84,7 @@ You recovered data from a disk and want to:
 ---
 
 MIT licensed.
+
+---
+
+![Tests](https://github.com/draprar/tkinter-image-collector/actions/workflows/ci.yml/badge.svg)
