@@ -1,44 +1,86 @@
-# Image Collector
+# 📸 Image Collector
 
-This is a simple Python tool that recursively scans a user-selected folder and all its subfolders for image files, then copies all images into a new folder on your Desktop. It handles duplicate filenames and identical file contents by automatically renaming duplicates with suffixes like `_1` or `_dup`. 
-
-A log file detailing all operations is saved in the new folder.
-
-## Features
-
-- Recursive search through all subfolders
-- Supports common image formats: JPG, JPEG, PNG, GIF, BMP, TIFF, WEBP
-- Detects duplicates by file content (SHA256 hash) and renames them instead of skipping
-- Creates a timestamped folder on the Desktop for collected images
-- Generates a detailed log file with copy/rename operations
-- Simple GUI for folder selection and user messages (using Tkinter)
-
-## Requirements
-
-- Python 3.8 or higher
-- Tkinter (usually included in standard Python installs)
-- No additional dependencies
-
-## Usage
-
-1. Run the script:
-```
-python main.py
-```
-3. An info window will explain the program.
-3. Select the folder you want to scan.
-4. The program will create a new folder on your Desktop with all collected images and a log file.
-5. After completion, a summary window will appear.
-
-## Notes
-
-- Duplicate files with the same name or identical content are renamed automatically.
-- The log file (`log.txt`) contains full details of copied and renamed files.
-
-## License
-
-This script is free to use and modify.
+A modern GUI tool for Windows that recursively scans a selected folder, collects image files, and saves them into a single, organized directory on your Desktop.
 
 ---
 
-Enjoy organizing your image collections!
+## ✅ Features
+
+- Recursively scans all subfolders
+- Copies all image files to a new folder on the Desktop
+- Automatically organizes images into subfolders by date (EXIF or file modification date)
+- Detects duplicates by **SHA256 hash**
+- Renames duplicates with `_dup` suffix instead of skipping
+- Displays progress bar and status updates
+- Supports **Dry Run** mode (no files are actually copied)
+- Generates a `log.txt` file with operation details (except in dry run)
+
+---
+
+## 📁 Supported formats
+
+- `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tiff`, `.webp`
+
+---
+
+## 🧪 Dry Run Mode
+
+When the checkbox **Dry run (simulate only)** is selected:
+- No files or folders are created
+- Nothing is copied or renamed
+- A full simulation is performed and a summary is shown
+- Useful for previewing the results without making changes
+
+---
+
+## 🚀 How to run
+
+Install required packages:
+
+```bash
+pip install -r requirements.txt
+````
+
+Run the script:
+```
+python main.py
+```
+
+## 🗂️ Output
+
+- A new folder is created on the Desktop: `COLLECTED_IMAGES_<timestamp>`
+- Inside it, images are grouped into subfolders like `2024-07-01`, based on EXIF date or file modification date
+- Duplicate images (same content) are renamed with a `_dup` suffix (e.g., `IMG_001_dup.jpg`)
+- A `log.txt` file is created in the root output folder (unless running in dry run mode)
+  - Contains paths and actions taken (`COPY`, `RENAME`, `DUPLICATE`)
+  - Summary of number of copied and renamed files
+
+---
+
+## 🔧 Requirements
+
+- Python 3.10 or newer
+- Tested on Windows 10/11
+
+---
+
+## 📌 Example use case
+
+You recovered data from a disk and want to:
+
+- Scan a deeply nested directory
+- Extract only image files
+- Organize them by date
+- Keep all unique files and rename duplicates with `_dup`
+
+---
+
+## 🗒️ Notes
+
+- The app does not delete or modify any files in the source folder
+- Sorting is based on EXIF date or file modification time
+- Progress is shown during scanning and copying
+
+---
+
+MIT licensed.
