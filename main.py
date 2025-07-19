@@ -46,7 +46,6 @@ def get_unique_name(base_path, filename, suffix=""):
 
 
 def scan_files(source_dir, selected_types):
-    all_exts = set.union(*(FILE_TYPES[t] for t in selected_types if t in FILE_TYPES)) if selected_types else set()
     all_files = [Path(root) / f for root, _, files in os.walk(source_dir) for f in files]
     results = []
 
