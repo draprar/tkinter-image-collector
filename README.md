@@ -1,35 +1,42 @@
-# 📸 Image Collector
+# 📂 Universal File Collector
 
-A modern GUI tool for Windows that recursively scans a selected folder, collects image files, and saves them into a single, organized directory on your Desktop.
+A modern GUI tool for Windows that recursively scans a selected folder, collects files by selected categories (Images, Documents, Videos, Audio, Archives), and saves them into organized directories on your Desktop.
 
 ---
 
 ## ✅ Features
 
-- Recursively scans all subfolders
-- Copies all image files to a new folder on the Desktop
-- Automatically organizes images into subfolders by date (EXIF or file modification date)
-- Detects duplicates by **SHA256 hash**
-- Renames duplicates with `_dup` suffix instead of skipping
-- Displays progress bar and status updates
-- Supports **Dry Run** mode (no files are actually copied)
-- Generates a `log.txt` file with operation details (except in dry run)
+- Recursively scans all subfolders  
+- Supports selectable file categories: Images, Documents, Videos, Audio, Archives, or All  
+- Copies selected file types to a new folder on the Desktop  
+- Automatically organizes files into subfolders by category and date (file modification date)  
+- Detects duplicates by **SHA256 hash**  
+- Renames duplicates with `_dup` suffix instead of skipping  
+- Displays progress bar and status updates in the GUI  
+- Supports **Dry Run** mode (simulate without copying or renaming)  
+- Generates a `log.txt` file with detailed operation records (except in dry run mode)  
+- Simple, responsive customtkinter GUI with checkboxes for file type selection  
+- Ability to open output folder directly from summary window  
 
 ---
 
 ## 📁 Supported formats
 
-- `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tiff`, `.webp`
+- **Images:** `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tiff`, `.webp`  
+- **Documents:** `.pdf`, `.docx`, `.txt`, `.xlsx`, `.csv`, `.pptx`  
+- **Videos:** `.mp4`, `.mov`, `.avi`, `.mkv`, `.3gp`, `.wmv`, `.m4v`  
+- **Audio:** `.mp3`, `.wav`, `.m4a`, `.ogg`, `.flac`, `.aac`  
+- **Archives:** `.zip`, `.rar`, `.7z`, `.tar`, `.gz`, `.iso`  
 
 ---
 
 ## 🧪 Dry Run Mode
 
-When the checkbox **Dry run (simulate only)** is selected:
-- No files or folders are created
-- Nothing is copied or renamed
-- A full simulation is performed and a summary is shown
-- Useful for previewing the results without making changes
+When the checkbox **Dry run (simulate only)** is selected:  
+- No files or folders are created  
+- No copying or renaming occurs  
+- The process simulates the entire operation and provides a summary  
+- Useful for previewing results before actual changes  
 
 ---
 
@@ -46,44 +53,33 @@ Run the script:
 python main.py
 ```
 
-## 🗂️ Output
-
-- A new folder is created on the Desktop: `COLLECTED_IMAGES_<timestamp>`
-- Inside it, images are grouped into subfolders like `2024-07-01`, based on EXIF date or file modification date
-- Duplicate images (same content) are renamed with a `_dup` suffix (e.g., `IMG_001_dup.jpg`)
-- A `log.txt` file is created in the root output folder (unless running in dry run mode)
-  - Contains paths and actions taken (`COPY`, `RENAME`, `DUPLICATE`)
-  - Summary of number of copied and renamed files
-
 ---
 
-## 🔧 Requirements
+## 🗂️ Output
 
-- Python 3.10 or newer
-- Tested on Windows 10/11
+- A new folder is created on your Desktop with a timestamped name, e.g., `COLLECTED_FILES_2025-07-15_15-30-00`  
+- Inside the folder, files are organized into subfolders named `<Category>_<YYYY-MM-DD>`, based on file modification date  
+- Duplicate files with identical content are renamed with a `_dup` suffix (e.g., `document_dup.pdf`)  
+- A `log.txt` file is created in the root output folder (except in dry run mode)  
+  - Contains detailed copy/rename/duplicate actions and a summary  
 
 ---
 
 ## 📌 Example use case
 
-You recovered data from a disk and want to:
-
-- Scan a deeply nested directory
-- Extract only image files
-- Organize them by date
-- Keep all unique files and rename duplicates with `_dup`
+You want to recover and organize your files from a large, messy folder structure by:  
+- Selecting exactly which file types to collect  
+- Sorting files by category and modification date  
+- Keeping all unique files intact and renaming duplicates  
+- Previewing the process before actual copying with dry run mode  
 
 ---
 
 ## 🗒️ Notes
 
-- The app does not delete or modify any files in the source folder
-- Sorting is based on EXIF date or file modification time
-- Progress is shown during scanning and copying
-
----
-
-MIT licensed.
+- The source files and folders are never deleted or modified  
+- Sorting is based solely on file modification timestamps  
+- The GUI provides real-time progress and status messages
 
 ---
 
