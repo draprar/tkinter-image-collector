@@ -7,16 +7,18 @@ A modern GUI tool for Windows that recursively scans a selected folder, collects
 ## ✅ Features
 
 - Recursively scans all subfolders  
-- Supports selectable file categories: Images, Documents, Videos, Audio, Archives, or All  
-- Copies selected file types to a new folder on the Desktop  
-- Automatically organizes files into subfolders by category and date (file modification date)  
-- Detects duplicates by **SHA256 hash**  
-- Renames duplicates with `_dup` suffix instead of skipping  
-- Displays progress bar and status updates in the GUI  
-- Supports **Dry Run** mode (simulate without copying or renaming)  
-- Generates a `log.txt` file with detailed operation records (except in dry run mode)  
-- Simple, responsive customtkinter GUI with checkboxes for file type selection  
-- Ability to open output folder directly from summary window  
+- Selectable file categories: **Images**, **Documents**, **Videos**, **Audio**, **Archives**, or **All**  
+- Automatically organizes files into subfolders by **category** and **modification date**  
+- Detects **duplicate content** using **SHA-256 hashes**  
+- Renames duplicates with `_dup` suffix instead of skipping or overwriting  
+- **Dry Run** mode: simulate the operation without copying or modifying anything  
+- Responsive `customtkinter` GUI with:
+  - Category checkboxes
+  - Status label and progress bar
+  - Preview dialog before copying
+  - Summary window with result info
+- Creates `log.txt` with detailed file actions (only in real runs)
+- Supports **manual preview** of found files via Explorer before final copy
 
 ---
 
@@ -28,15 +30,19 @@ A modern GUI tool for Windows that recursively scans a selected folder, collects
 - **Audio:** `.mp3`, `.wav`, `.m4a`, `.ogg`, `.flac`, `.aac`  
 - **Archives:** `.zip`, `.rar`, `.7z`, `.tar`, `.gz`, `.iso`  
 
+Files with unknown extensions are categorized under **`OTHER`** when "All" is selected.
+
 ---
 
 ## 🧪 Dry Run Mode
 
-When the checkbox **Dry run (simulate only)** is selected:  
-- No files or folders are created  
-- No copying or renaming occurs  
-- The process simulates the entire operation and provides a summary  
-- Useful for previewing results before actual changes  
+When **Dry run (simulate only)** is selected:
+- No folders or files are created or copied  
+- Duplicates are detected but not renamed  
+- A full simulation is run to estimate results  
+- Summary is shown without writing `log.txt`  
+
+Use this to **preview what would happen** before committing to changes.
 
 ---
 
@@ -57,29 +63,40 @@ python main.py
 
 ## 🗂️ Output
 
-- A new folder is created on your Desktop with a timestamped name, e.g., `COLLECTED_FILES_2025-07-15_15-30-00`  
-- Inside the folder, files are organized into subfolders named `<Category>_<YYYY-MM-DD>`, based on file modification date  
-- Duplicate files with identical content are renamed with a `_dup` suffix (e.g., `document_dup.pdf`)  
-- A `log.txt` file is created in the root output folder (except in dry run mode)  
-  - Contains detailed copy/rename/duplicate actions and a summary  
+- Output folder:  
+  Created on your **Desktop** with a timestamp, e.g.:  
+  `COLLECTED_FILES_2025-07-22_16-45-10`
+
+- Inside:
+  - Subfolders: named `<Category>_<YYYY-MM-DD>`  
+    (e.g., `Documents_2025-06-30`, based on **file modification date**)  
+  - Unique files are copied as-is  
+  - Duplicate files (same content) are renamed with `_dup` suffix  
+    (e.g., `report_dup.pdf`)  
+  - A `log.txt` is generated (except in dry run), containing:
+    - All copy and rename operations
+    - Summary: number of copied files and renamed duplicates
 
 ---
 
 ## 📌 Example use case
 
-You want to recover and organize your files from a large, messy folder structure by:  
-- Selecting exactly which file types to collect  
-- Sorting files by category and modification date  
-- Keeping all unique files intact and renaming duplicates  
-- Previewing the process before actual copying with dry run mode  
+You're recovering files from a messy backup or external drive and want to:
+- Select only images and documents
+- Sort them into clean folders by date and type
+- Avoid overwriting duplicates (rename them instead)
+- Preview everything in a temp folder before copying
+- Get a clean, timestamped log of what happened
 
 ---
 
 ## 🗒️ Notes
 
-- The source files and folders are never deleted or modified  
-- Sorting is based solely on file modification timestamps  
-- The GUI provides real-time progress and status messages
+- No original files are ever deleted or modified  
+- Sorting is based only on **modification timestamps**  
+- GUI gives real-time progress bar and status updates  
+- All core file logic is covered by unit tests using `pytest`  
+- Dry Run mode is perfect for safe previews  
 
 ---
 

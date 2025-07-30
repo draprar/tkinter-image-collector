@@ -1,0 +1,56 @@
+name: Build Executables
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers only when a new version tag like v1.0.0 is pushed
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller customtkinter
+
+      - name: Build executable
+        run: |
+          pyinstaller --name UniversalFileCollector --onefile main.py
+
+      - name: Rename and move artifact
+        run: |
+          mkdir -p release
+          OS=$(uname -s)
+          EXT=""
+          if [[ "$OS" == "Darwin" ]]; then
+            EXT=".app"
+          elif [[ "$OS" == "Linux" ]]; then
+            EXT=""
+          elif [[ "$OS" == "MINGW"* || "$OS" == "MSYS"* || "$OS" == "CYGWIN"* || "$OS" == *"NT"* ]]; then
+            EXT=".exe"
+          fi
+          mv dist/UniversalFileCollector* release/UniversalFileCollector-${{ runner.os }}$EXT
+
+        shell: bash
+
+      - name: Upload artifact to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
