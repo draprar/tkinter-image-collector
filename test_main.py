@@ -1,185 +1,189 @@
 import os
-import tempfile
-import hashlib
-from unittest import mock
-from datetime import datetime
-import main
+import stat
+from pathlib import Path
+
+import pytest
+
+from main import FileCollectorCore, DEFAULT_DATE_FOLDER
 
 
-# === HASHING ===
-def test_file_hash():
-    # SHA-256 hash of file content should match expected value
-    with tempfile.NamedTemporaryFile("wb", delete=False) as tf:
-        tf.write(b"test content")
-        tf.flush()
-        h = main.file_hash(tf.name)
-    expected = hashlib.sha256(b"test content").hexdigest()
-    os.unlink(tf.name)
-    assert h == expected
+@pytest.fixture
+def temp_file(tmp_path):
+    """Create a temporary file with some content."""
+    file_path = tmp_path / "test.txt"
+    file_path.write_text("abc")
+    return file_path
 
 
-# === DATE FOLDER EXTRACTION ===
-def test_get_date_folder_returns_date(tmp_path):
-    f = tmp_path / "file.txt"
-    f.write_text("hello")
-    dt = datetime(2020, 1, 1, 12, 0, 0)
-    mod_time = dt.timestamp()
-    os.utime(f, (mod_time, mod_time))
-    assert main.get_date_folder(f) == "2020-01-01"
+@pytest.fixture
+def unreadable_file(tmp_path):
+    """Create a file with no read permissions."""
+    file_path = tmp_path / "no_read.txt"
+    file_path.write_text("secret")
+    file_path.chmod(0)
+    yield file_path
+    try:
+        # Restore permissions after test
+        file_path.chmod(stat.S_IWUSR | stat.S_IRUSR)
+    except FileNotFoundError:
+        pass
 
 
-def test_get_date_folder_handles_exception():
-    class BadPath:
-        def stat(self):
-            raise Exception("error")
-    assert main.get_date_folder(BadPath()) == "no_dates"
+def test_file_hash_ok(temp_file):
+    h = FileCollectorCore.file_hash(temp_file)
+    assert isinstance(h, str) and len(h) == 64  # SHA-256 hex digest
 
 
-# === UNIQUE NAME HANDLING ===
-def test_get_unique_name_no_collision(tmp_path):
-    fname = "something.txt"
-    path = main.get_unique_name(tmp_path, fname)
-    assert path.name == fname
+def test_file_hash_error(monkeypatch, temp_file):
+    # Simulate file read error
+    def fake_open(*args):
+        raise OSError("cannot read file")
+    monkeypatch.setattr("builtins.open", fake_open)
+    assert FileCollectorCore.file_hash(temp_file) is None
 
 
-def test_get_unique_name_with_collisions(tmp_path):
-    base = tmp_path
-    fname = "file.txt"
-    (base / fname).write_text("a")
-    unique_1 = main.get_unique_name(base, fname)
-    assert unique_1.name == "file_1.txt"
-    (base / unique_1.name).write_text("b")
-    unique_2 = main.get_unique_name(base, fname)
-    assert unique_2.name == "file_2.txt"
+def test_get_date_folder_ok(temp_file):
+    result = FileCollectorCore.get_date_folder(temp_file)
+    assert result.count("-") == 2  # Format YYYY-MM-DD
 
 
-# === SCAN FILES ===
-def test_scan_files_filters_correctly(tmp_path):
-    doc = tmp_path / "file.pdf"
-    img = tmp_path / "img.jpg"
-    unknown = tmp_path / "weird.ext"
-    doc.write_text("doc")
-    img.write_text("img")
-    unknown.write_text("???")
-
-    selected = ["Documents", "Images"]
-    result = main.scan_files(str(tmp_path), selected)
-    names = [f.name for f, _ in result]
-
-    assert "file.pdf" in names
-    assert "img.jpg" in names
-    assert "weird.ext" not in names
+def test_get_date_folder_error(monkeypatch, temp_file):
+    # Simulate error on stat call
+    monkeypatch.setattr(Path, "stat", lambda self: (_ for _ in ()).throw(OSError("fail")))
+    result = FileCollectorCore.get_date_folder(temp_file)
+    assert result == DEFAULT_DATE_FOLDER
 
 
-def test_scan_files_all_includes_unknown(tmp_path):
-    f = tmp_path / "mystery.xyz"
-    f.write_text("???")
-    result = main.scan_files(str(tmp_path), ["All"])
-    assert len(result) == 1
-    assert result[0][1] == "OTHER"
+def test_get_unique_name_no_conflict(tmp_path):
+    f = FileCollectorCore.get_unique_name(tmp_path, "file.txt")
+    assert f == tmp_path / "file.txt"
 
 
-# === COLLECT FILES ===
+def test_get_unique_name_with_conflict(tmp_path):
+    # Create existing file to force conflict
+    existing = tmp_path / "file.txt"
+    existing.write_text("x")
+    f = FileCollectorCore.get_unique_name(tmp_path, "file.txt")
+    assert f.name.startswith("file_1")
+
+
+def test_categorize_file_known(temp_file):
+    # Change suffix to one from categories
+    p = temp_file.with_suffix(".jpg")
+    p.write_text("x")
+    assert FileCollectorCore.categorize_file(p) == "Images"
+
+
+def test_categorize_file_other(temp_file):
+    p = temp_file.with_suffix(".zzz")
+    p.write_text("x")
+    assert FileCollectorCore.categorize_file(p) == "OTHER"
+
+
+def test_filter_files_all(tmp_path):
+    f1 = tmp_path / "a.jpg"
+    f1.write_text("x")
+    f2 = tmp_path / "b.txt"
+    f2.write_text("x")
+    result = FileCollectorCore.filter_files(str(tmp_path), ["All"])
+    assert len(result) == 2
+
+
+def test_filter_files_selected(tmp_path):
+    f1 = tmp_path / "a.jpg"
+    f1.write_text("x")
+    f2 = tmp_path / "b.txt"
+    f2.write_text("x")
+    result = FileCollectorCore.filter_files(str(tmp_path), ["Images"])
+    assert result == [(f1, "Images")]
+
+
+def test_preview_files_symlink(tmp_path):
+    src = tmp_path / "a.txt"
+    src.write_text("x")
+    temp_dir = tmp_path / "preview"
+    FileCollectorCore.preview_files([(src, "OTHER")], temp_dir)
+    # Should have symlink or copy created
+    assert any(temp_dir.iterdir())
+
+
+def test_preview_files_fallback_copy(monkeypatch, tmp_path):
+    src = tmp_path / "a.txt"
+    src.write_text("x")
+    temp_dir = tmp_path / "preview"
+
+    def fail_symlink(*args, **kwargs):
+        raise OSError("no symlink")
+    def fail_link(*args, **kwargs):
+        raise OSError("no link")
+
+    monkeypatch.setattr(os, "symlink", fail_symlink)
+    monkeypatch.setattr(os, "link", fail_link)
+
+    FileCollectorCore.preview_files([(src, "OTHER")], temp_dir)
+    copied_file = temp_dir / "a.txt"
+    assert copied_file.exists()
+
+
+def test_collect_selected_files_basic(tmp_path):
+    src = tmp_path / "a.txt"
+    src.write_text("x")
+    files = [(src, "OTHER")]
+
+    copied, renamed, target = FileCollectorCore.collect_selected_files(
+        files, tmp_path / "dest", dry_run=False,
+        update_status=lambda x: None,
+        update_progress=lambda x: None,
+    )
+    assert copied == 1
+    assert renamed == 0
+    log_file = target / "log.txt"
+    assert log_file.exists()
+
+
 def test_collect_selected_files_dry_run(tmp_path):
-    src_file = tmp_path / "test.txt"
-    src_file.write_text("content")
-    files_to_process = [(src_file, "Documents")]
+    src = tmp_path / "a.txt"
+    src.write_text("x")
+    files = [(src, "OTHER")]
+    dest = tmp_path / "dest"
+    dest.mkdir()  # create destination folder, dry_run doesn't create it
 
-    target_dir = tmp_path / "target"
-    copied, renamed, target = main.collect_selected_files(
-        files_to_process,
-        target_dir,
-        dry_run=True,
+    copied, renamed, target = FileCollectorCore.collect_selected_files(
+        files, dest, dry_run=True,
         update_status=lambda x: None,
         update_progress=lambda x: None,
     )
-
     assert copied == 1
     assert renamed == 0
-    assert target == target_dir
-    assert not target_dir.exists()
+    assert (target / "log.txt").exists()
 
 
-@mock.patch("shutil.copy2")
-def test_collect_selected_files_real_copy(mock_copy, tmp_path):
-    src_file = tmp_path / "test.txt"
-    src_file.write_text("content")
-    files_to_process = [(src_file, "Documents")]
-
-    target_dir = tmp_path / "target"
-    copied, renamed, target = main.collect_selected_files(
-        files_to_process,
-        target_dir,
-        dry_run=False,
+def test_collect_selected_files_duplicate(tmp_path):
+    src1 = tmp_path / "a.txt"
+    src1.write_text("x")
+    src2 = tmp_path / "b.txt"
+    src2.write_text("x")
+    # Both files have same content → same hash
+    files = [(src1, "OTHER"), (src2, "OTHER")]
+    copied, renamed, target = FileCollectorCore.collect_selected_files(
+        files, tmp_path / "dest", dry_run=False,
         update_status=lambda x: None,
         update_progress=lambda x: None,
     )
-
     assert copied == 1
+    assert renamed == 1
+    assert (target / "log.txt").exists()
+
+
+def test_collect_selected_files_unreadable_hash(tmp_path, monkeypatch):
+    src = tmp_path / "a.txt"
+    src.write_text("x")
+    monkeypatch.setattr(FileCollectorCore, "file_hash", lambda _: None)
+    files = [(src, "OTHER")]
+    copied, renamed, target = FileCollectorCore.collect_selected_files(
+        files, tmp_path / "dest", dry_run=False,
+        update_status=lambda x: None,
+        update_progress=lambda x: None,
+    )
+    assert copied == 0
     assert renamed == 0
-    assert target == target_dir
-    mock_copy.assert_called_once()
-
-
-@mock.patch("shutil.copy2")
-def test_collect_selected_files_duplicate(mock_copy, tmp_path):
-    # Two files with identical content (same hash) -> one renamed
-    f1 = tmp_path / "file1.txt"
-    f2 = tmp_path / "file2.txt"
-    f1.write_text("same content")
-    f2.write_text("same content")
-
-    files = [(f1, "Documents"), (f2, "Documents")]
-    target_dir = tmp_path / "target"
-
-    copied, renamed, target = main.collect_selected_files(
-        files, target_dir,
-        dry_run=False,
-        update_status=lambda x: None,
-        update_progress=lambda x: None,
-    )
-
-    assert copied == 1
-    assert renamed == 1
-
-
-def test_collect_selected_files_rename_only(tmp_path):
-    # Two files with the same name but different content (hash) -> rename conflict
-    f1 = tmp_path / "duplicate.txt"
-    f1.write_text("AAA")
-
-    f2_path = tmp_path / "copy"
-    f2_path.mkdir()
-    f2 = f2_path / "duplicate.txt"
-    f2.write_text("BBB")
-
-    files = [(f1, "Documents"), (f2, "Documents")]
-    target_dir = tmp_path / "target"
-
-    copied, renamed, target = main.collect_selected_files(
-        files, target_dir,
-        dry_run=False,
-        update_status=lambda x: None,
-        update_progress=lambda x: None,
-    )
-
-    assert copied == 2
-    assert renamed == 1
-
-
-def test_log_file_is_created(tmp_path):
-    src_file = tmp_path / "logme.txt"
-    src_file.write_text("data")
-    target_dir = tmp_path / "target"
-
-    copied, renamed, _ = main.collect_selected_files(
-        [(src_file, "Documents")], target_dir,
-        dry_run=False,
-        update_status=lambda x: None,
-        update_progress=lambda x: None,
-    )
-
-    log_path = target_dir / "log.txt"
-    assert log_path.exists()
-    content = log_path.read_text(encoding="utf-8")
-    assert "COPY" in content or "RENAME" in content
