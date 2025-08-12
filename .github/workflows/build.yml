@@ -3,21 +3,20 @@ name: Build Executables
 on:
   push:
     tags:
-      - 'v*'  # Triggers only when a new version tag like v1.0.0 is pushed
+      - 'v*'  # trigger only on tags like v1.0.0
 
 jobs:
   build:
-    name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.12
@@ -32,23 +31,31 @@ jobs:
         run: |
           pyinstaller --name UniversalFileCollector --onefile main.py
 
-      - name: Rename and move artifact
+      - name: Prepare release directory
         run: |
-          mkdir -p release
-          OS=$(uname -s)
-          EXT=""
-          if [[ "$OS" == "Darwin" ]]; then
-            EXT=".app"
-          elif [[ "$OS" == "Linux" ]]; then
-            EXT=""
-          elif [[ "$OS" == "MINGW"* || "$OS" == "MSYS"* || "$OS" == "CYGWIN"* || "$OS" == *"NT"* ]]; then
-            EXT=".exe"
-          fi
-          mv dist/UniversalFileCollector* release/UniversalFileCollector-${{ runner.os }}$EXT
+          mkdir release
 
+      - name: Rename and move executable
         shell: bash
+        run: |
+          OS_NAME="${{ runner.os }}"
+          EXT=""
+          if [ "$OS_NAME" = "Windows" ]; then
+            EXT=".exe"
+          elif [ "$OS_NAME" = "macOS" ]; then
+            EXT=""  # pyinstaller produces binary without .app by default
+          elif [ "$OS_NAME" = "Linux" ]; then
+            EXT=""
+          fi
+          # The built executable path:
+          SRC="dist/UniversalFileCollector${EXT}"
+          # Destination path:
+          DEST="release/UniversalFileCollector-${OS_NAME}${EXT}"
 
-      - name: Upload artifact to release
+          echo "Moving $SRC to $DEST"
+          mv "$SRC" "$DEST"
+
+      - name: Upload release artifacts
         uses: softprops/action-gh-release@v2
         with:
           files: release/*
