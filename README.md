@@ -1,24 +1,24 @@
 # 📂 Universal File Collector
 
-A modern GUI tool for Windows that recursively scans a selected folder, collects files by selected categories (Images, Documents, Videos, Audio, Archives), and saves them into organized directories on your Desktop.
+A modern cross-platform GUI tool that recursively scans a selected folder, collects files by chosen categories (Images, Documents, Videos, Audio, Archives, Other), and organizes them into categorized, date-based subfolders on your Desktop.
 
 ---
 
 ## ✅ Features
 
 - Recursively scans all subfolders  
-- Selectable file categories: **Images**, **Documents**, **Videos**, **Audio**, **Archives**, or **All**  
-- Automatically organizes files into subfolders by **category** and **modification date**  
-- Detects **duplicate content** using **SHA-256 hashes**  
-- Renames duplicates with `_dup` suffix instead of skipping or overwriting  
-- **Dry Run** mode: simulate the operation without copying or modifying anything  
-- Responsive `customtkinter` GUI with:
-  - Category checkboxes
-  - Status label and progress bar
-  - Preview dialog before copying
-  - Summary window with result info
-- Creates `log.txt` with detailed file actions (only in real runs)
-- Supports **manual preview** of found files via Explorer before final copy
+- Selectable file categories: **Images**, **Documents**, **Videos**, **Audio**, **Archives**, **Other**, or **All**  
+- Organizes files into subfolders by **category** and **modification date** (`YYYY-MM-DD`)  
+- Detects duplicate content using **SHA-256 hashing**  
+- Renames duplicates by appending a suffix (`_dup`, `_dup1`, etc.) instead of skipping or overwriting  
+- **Dry Run** mode simulates the entire process without modifying files or folders  
+- Responsive GUI built with `customtkinter` featuring:  
+  - Checkboxes for selecting file categories  
+  - Status label and progress bar with ETA  
+  - Preview window showing found files before final copying  
+  - Summary dialog after operation completion  
+- Creates `log.txt` with detailed file copy and rename operations (except in dry runs)  
+- Supports manual preview of found files in Explorer (or system file manager)
 
 ---
 
@@ -29,30 +29,28 @@ A modern GUI tool for Windows that recursively scans a selected folder, collects
 - **Videos:** `.mp4`, `.mov`, `.avi`, `.mkv`, `.3gp`, `.wmv`, `.m4v`  
 - **Audio:** `.mp3`, `.wav`, `.m4a`, `.ogg`, `.flac`, `.aac`  
 - **Archives:** `.zip`, `.rar`, `.7z`, `.tar`, `.gz`, `.iso`  
-
-Files with unknown extensions are categorized under **`OTHER`** when "All" is selected.
+- **Other:** Files with unknown or unlisted extensions when **All** categories are selected
 
 ---
 
 ## 🧪 Dry Run Mode
 
-When **Dry run (simulate only)** is selected:
-- No folders or files are created or copied  
-- Duplicates are detected but not renamed  
-- A full simulation is run to estimate results  
-- Summary is shown without writing `log.txt`  
+- No actual file copying or folder creation  
+- Detects duplicates and simulates renaming but does not modify files  
+- Provides a preview of actions and expected results  
+- No `log.txt` is written during dry run  
 
-Use this to **preview what would happen** before committing to changes.
+Use this mode to safely test how the operation would perform.
 
 ---
 
 ## 🚀 How to run
 
-Install required packages:
+Install dependencies:
 
-```bash
+```
 pip install -r requirements.txt
-````
+```
 
 Run the script:
 ```

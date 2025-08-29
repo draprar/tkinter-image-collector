@@ -15,6 +15,12 @@ from tkinter import filedialog, messagebox
 
 import customtkinter as ctk
 
+try:
+    from ai_pipeline import ocr, image_embedding, classifier, text_analysis
+    AI_AVAILABLE = True
+except ImportError:
+    AI_AVAILABLE = False
+
 # =====================================================
 # Global configuration
 # =====================================================
