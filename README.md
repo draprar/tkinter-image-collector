@@ -1,6 +1,6 @@
 # 📂 Universal File Collector
 
-A modern GUI tool for Windows that recursively scans a selected folder, collects files by selected categories (Images, Documents, Videos, Audio, Archives), and saves them into organized directories on your Desktop.
+Windows GUI tool that hunts through messy folders, grabs your files by type (Images, Docs, Videos, Audio, Archives), and neatly drops them into timestamped folders on your Desktop.
 
 ---
 
