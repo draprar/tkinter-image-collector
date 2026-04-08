@@ -11,22 +11,50 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.12
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-runtime.txt
+            requirements-dev.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pillow customtkinter
+
+      - name: Lint (ruff)
+        run: |
+          ruff check .
+
+      - name: Security scan (bandit)
+        run: |
+          bandit -q -r core.py -r ui.py -r main.py
+
+      - name: Type check (mypy)
+        run: |
+          mypy core.py ui.py main.py
+
+      - name: Dependency audit (pip-audit)
+        run: |
+          pip-audit -r requirements-runtime.txt
 
       - name: Run tests
         run: |
-          pytest --maxfail=1 --tb=short
+          pytest --maxfail=1 --tb=short --cov=core --cov-report=term-missing --cov-fail-under=50
+
+      - name: Run UI smoke tests
+        run: |
+          pytest -q tests/test_ui_integration.py
+

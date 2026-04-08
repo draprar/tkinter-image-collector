@@ -8,28 +8,38 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.12
+          cache: pip
+          cache-dependency-path: |
+            requirements-runtime.txt
+            requirements-build.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller customtkinter
+          pip install -r requirements-build.txt
+
+      - name: Run tests before build
+        run: |
+          pip install -r requirements-dev.txt
+          pytest --maxfail=1 --tb=short
 
       - name: Build executable
         run: |
-          pyinstaller --name UniversalFileCollector --onefile main.py
+          pyinstaller --name UniversalFileCollector --onefile --hidden-import=core --hidden-import=ui main.py
 
       - name: Prepare release directory
         run: |
