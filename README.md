@@ -1,9 +1,20 @@
-# Universal File Collector
+# Universal File Collector (GUI)
 
-Desktop GUI tool for sorting files by type and modification date.
-It scans a source directory recursively, groups files into categories,
-detects duplicate content using SHA-256, and copies results into a timestamped
-folder inside a destination directory chosen by the user.
+![CI](https://github.com/draprar/tkinter-image-collector/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Code%20style](https://img.shields.io/badge/code%20style-ruff-261230)
+
+Cross-platform GUI to automatically sort and de-duplicate your media and documents in minutes.
+One click to scan, preview, and organize into clean, dated folders.
+
+![App Screenshot](docs/screenshot.png)
+
+## Why this tool exists
+
+- Folders with mixed photos, docs, and downloads quickly become chaos.
+- Different dates and formats make it hard to find anything later.
+- Manual deduplication is slow and error-prone.
 
 ## Features
 
@@ -38,6 +49,15 @@ When `Dry run (simulate only)` is enabled:
 
 ## Installation and run
 
+### For users (no Python setup)
+
+- Download the latest release from GitHub: https://github.com/draprar/tkinter-image-collector/releases/latest
+- Run the executable for your OS.
+
+Supported OS: Windows, macOS, Linux
+
+### For developers
+
 Create and activate virtual environment (Windows PowerShell):
 
 ```powershell
@@ -57,23 +77,13 @@ Run app:
 python main.py
 ```
 
-## Dependency files
+## Usage
 
-- `requirements-runtime.txt` - app runtime dependencies.
-- `requirements-dev.txt` - test/lint/security tooling.
-- `requirements-build.txt` - build-time dependencies.
-- `requirements.txt` - convenience meta-file (runtime + dev).
+1. Select a source folder to scan.
+2. Select a destination folder for output.
+3. Pick categories (or All), then click Start.
 
-## Module structure
-
-- `core.py` — `FileCollectorCore` class (business logic, no UI dependencies).
-- `ui.py` — `FileCollectorLauncher`, `SummaryWindow` (GUI components).
-- `main.py` — Entry point (imports and runs UI).
-
-This separation allows:
-- Testing of core logic independently from GUI.
-- Easier GUI refactoring (e.g., switch to PyQt later).
-- Cleaner dependency management.
+Optional: enable Dry run to simulate, or Preview to inspect before copy.
 
 ## Output structure
 
@@ -83,10 +93,14 @@ After selecting destination folder in GUI, app creates a run directory like:
 
 Inside it:
 
-- subfolders named `<Category>_<YYYY-MM-DD>`,
-- copied unique files,
-- renamed duplicates with `_dup`,
-- `log.txt` (only for real runs).
+```
+COLLECTED_FILES_2026-04-08_12-30-00/
+├── Images_2024-12-01/
+│   ├── photo_001.jpg
+│   ├── photo_002_dup.jpg
+├── Documents_2023-10-05/
+└── log.txt
+```
 
 ## Quality checks
 
@@ -94,7 +108,7 @@ Inside it:
 pytest -q
 ruff check .
 mypy core.py ui.py main.py
-bandit -q -r core.py -r ui.py -r main.py
+python -m bandit -q core.py ui.py main.py
 pip-audit -r requirements-runtime.txt
 ```
 
@@ -105,8 +119,20 @@ pre-commit install
 pre-commit run --all-files
 ```
 
+## Roadmap
+
+- Parallel scanning for faster large directory processing.
+- More granular category presets (custom filters).
+- Optional CSV export of run summary.
+
+## Security
+
+If you discover a security issue, please report it privately (see `SECURITY.md`).
+
+## Contributing
+
+See `CONTRIBUTING.md` for development setup and PR guidelines.
+
 ## Author
 
 Developed by Walery ([@draprar](https://github.com/draprar/))
-
-![Tests](https://github.com/draprar/tkinter-image-collector/actions/workflows/ci.yml/badge.svg)
