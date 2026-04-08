@@ -103,4 +103,15 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# Ruff
+.ruff_cache/
+
+# Security/tool outputs
+.bandit
+
+# PyInstaller artifacts
+*.pyz
+dist/
+build/
+
 .idea
