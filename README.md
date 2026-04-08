@@ -1,103 +1,112 @@
-# 📂 Universal File Collector
+# Universal File Collector
 
-Windows GUI tool that hunts through messy folders, grabs your files by type (Images, Docs, Videos, Audio, Archives), and neatly drops them into timestamped folders on your Desktop.
+Desktop GUI tool for sorting files by type and modification date.
+It scans a source directory recursively, groups files into categories,
+detects duplicate content using SHA-256, and copies results into a timestamped
+folder inside a destination directory chosen by the user.
 
----
+## Features
 
-## ✅ Features
+- Recursive scan of source folder.
+- Category filtering: `Images`, `Documents`, `Videos`, `Audio`, `Archives`, `All`.
+- Organization by `<Category>_<YYYY-MM-DD>`.
+- Duplicate content detection via SHA-256.
+- Duplicate file renaming with `_dup` suffix (no overwrites).
+- Optional preview step before copy.
+- Dry-run mode with no filesystem writes to destination.
+- Preflight disk-space check before real copy operation.
+- Run summary in GUI and persistent `log.txt` for real runs.
 
-- Recursively scans all subfolders  
-- Selectable file categories: **Images**, **Documents**, **Videos**, **Audio**, **Archives**, or **All**  
-- Automatically organizes files into subfolders by **category** and **modification date**  
-- Detects **duplicate content** using **SHA-256 hashes**  
-- Renames duplicates with `_dup` suffix instead of skipping or overwriting  
-- **Dry Run** mode: simulate the operation without copying or modifying anything  
-- Responsive `customtkinter` GUI with:
-  - Category checkboxes
-  - Status label and progress bar
-  - Preview dialog before copying
-  - Summary window with result info
-- Creates `log.txt` with detailed file actions (only in real runs)
-- Supports **manual preview** of found files via Explorer before final copy
+## Supported formats
 
----
+- `Images`: `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tiff`, `.webp`
+- `Documents`: `.pdf`, `.docx`, `.txt`, `.xlsx`, `.csv`, `.pptx`
+- `Videos`: `.mp4`, `.mov`, `.avi`, `.mkv`, `.3gp`, `.wmv`, `.m4v`
+- `Audio`: `.mp3`, `.wav`, `.m4a`, `.ogg`, `.flac`, `.aac`
+- `Archives`: `.zip`, `.rar`, `.7z`, `.tar`, `.gz`, `.iso`
 
-## 📁 Supported formats
+Unknown extensions are categorized as `OTHER` when `All` is selected.
 
-- **Images:** `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tiff`, `.webp`  
-- **Documents:** `.pdf`, `.docx`, `.txt`, `.xlsx`, `.csv`, `.pptx`  
-- **Videos:** `.mp4`, `.mov`, `.avi`, `.mkv`, `.3gp`, `.wmv`, `.m4v`  
-- **Audio:** `.mp3`, `.wav`, `.m4a`, `.ogg`, `.flac`, `.aac`  
-- **Archives:** `.zip`, `.rar`, `.7z`, `.tar`, `.gz`, `.iso`  
+## Dry run behavior
 
-Files with unknown extensions are categorized under **`OTHER`** when "All" is selected.
+When `Dry run (simulate only)` is enabled:
 
----
+- no files are copied,
+- destination subfolders are not created,
+- `log.txt` is not written,
+- summary is still displayed in GUI.
 
-## 🧪 Dry Run Mode
+## Installation and run
 
-When **Dry run (simulate only)** is selected:
-- No folders or files are created or copied  
-- Duplicates are detected but not renamed  
-- A full simulation is run to estimate results  
-- Summary is shown without writing `log.txt`  
+Create and activate virtual environment (Windows PowerShell):
 
-Use this to **preview what would happen** before committing to changes.
-
----
-
-## 🚀 How to run
-
-Install required packages:
-
-```bash
-pip install -r requirements.txt
-````
-
-Run the script:
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
 ```
+
+Install dependencies:
+
+```powershell
+pip install -r requirements.txt
+```
+
+Run app:
+
+```powershell
 python main.py
 ```
 
----
+## Dependency files
 
-## 🗂️ Output
+- `requirements-runtime.txt` - app runtime dependencies.
+- `requirements-dev.txt` - test/lint/security tooling.
+- `requirements-build.txt` - build-time dependencies.
+- `requirements.txt` - convenience meta-file (runtime + dev).
 
-- Output folder:  
-  Created on your **Desktop** with a timestamp, e.g.:  
-  `COLLECTED_FILES_2025-07-22_16-45-10`
+## Module structure
 
-- Inside:
-  - Subfolders: named `<Category>_<YYYY-MM-DD>`  
-    (e.g., `Documents_2025-06-30`, based on **file modification date**)  
-  - Unique files are copied as-is  
-  - Duplicate files (same content) are renamed with `_dup` suffix  
-    (e.g., `report_dup.pdf`)  
-  - A `log.txt` is generated (except in dry run), containing:
-    - All copy and rename operations
-    - Summary: number of copied files and renamed duplicates
+- `core.py` — `FileCollectorCore` class (business logic, no UI dependencies).
+- `ui.py` — `FileCollectorLauncher`, `SummaryWindow` (GUI components).
+- `main.py` — Entry point (imports and runs UI).
 
----
+This separation allows:
+- Testing of core logic independently from GUI.
+- Easier GUI refactoring (e.g., switch to PyQt later).
+- Cleaner dependency management.
 
-## 📌 Example use case
+## Output structure
 
-You're recovering files from a messy backup or external drive and want to:
-- Select only images and documents
-- Sort them into clean folders by date and type
-- Avoid overwriting duplicates (rename them instead)
-- Preview everything in a temp folder before copying
-- Get a clean, timestamped log of what happened
+After selecting destination folder in GUI, app creates a run directory like:
 
----
+`COLLECTED_FILES_2026-04-08_12-30-00`
 
-## 🗒️ Notes
+Inside it:
 
-- No original files are ever deleted or modified  
-- Sorting is based only on **modification timestamps**  
-- GUI gives real-time progress bar and status updates  
-- All core file logic is covered by unit tests using `pytest`  
-- Dry Run mode is perfect for safe previews  
+- subfolders named `<Category>_<YYYY-MM-DD>`,
+- copied unique files,
+- renamed duplicates with `_dup`,
+- `log.txt` (only for real runs).
 
----
+## Quality checks
+
+```powershell
+pytest -q
+ruff check .
+mypy core.py ui.py main.py
+bandit -q -r core.py -r ui.py -r main.py
+pip-audit -r requirements-runtime.txt
+```
+
+Optional local hooks:
+
+```powershell
+pre-commit install
+pre-commit run --all-files
+```
+
+## Author
+
+Developed by Walery ([@draprar](https://github.com/draprar/))
 
 ![Tests](https://github.com/draprar/tkinter-image-collector/actions/workflows/ci.yml/badge.svg)
