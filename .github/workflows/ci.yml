@@ -40,7 +40,7 @@ jobs:
 
       - name: Security scan (bandit)
         run: |
-          bandit -q -r core.py -r ui.py -r main.py
+          python -m bandit -q core.py ui.py main.py
 
       - name: Type check (mypy)
         run: |
@@ -50,11 +50,10 @@ jobs:
         run: |
           pip-audit -r requirements-runtime.txt
 
-      - name: Run tests
-        run: |
-          pytest --maxfail=1 --tb=short --cov=core --cov-report=term-missing --cov-fail-under=50
-
       - name: Run UI smoke tests
         run: |
           pytest -q tests/test_ui_integration.py
 
+      - name: Run tests
+        run: |
+          pytest --maxfail=1 --tb=short --cov=core --cov-report=term-missing --cov-fail-under=50
