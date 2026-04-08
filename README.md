@@ -51,7 +51,7 @@ When `Dry run (simulate only)` is enabled:
 
 ### For users (no Python setup)
 
-- Download the latest release from GitHub: https://github.com/draprar/tkinter-image-collector/releases/latest
+- Download the latest release from GitHub: [Latest Release](https://github.com/draprar/tkinter-image-collector/releases/latest)
 - Run the executable for your OS.
 
 Supported OS: Windows, macOS, Linux
